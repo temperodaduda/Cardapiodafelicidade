@@ -120,95 +120,98 @@
     </footer>
 
     <script>
-        const frete = 0; // Frete fixo
-        const carrinho = [];
+    const frete = 0; // Frete fixo
+    const carrinho = [];
+    let produtoAtual = {}; // Variável para armazenar o produto atual
 
-        function montarPedido(nomeProduto, preco) {
-            document.getElementById("complementos").style.display = "block";
-            // Armazenar o produto no carrinho (se necessário)
+    function montarPedido(nomeProduto, preco) {
+        produtoAtual = { nome: nomeProduto, preco: preco }; // Armazena o produto selecionado
+        document.getElementById("complementos").style.display = "block";
+    }
+
+    function adicionarAoCarrinhoMontado() {
+        // Obter complementos selecionados
+        const complementosSelecionados = [];
+        const checkboxes = document.querySelectorAll('.complementos input[type="checkbox"]:checked');
+        checkboxes.forEach(checkbox => {
+            complementosSelecionados.push(checkbox.value);
+        });
+
+        // Adicionar ao carrinho
+        carrinho.push({
+            nome: produtoAtual.nome, 
+            preco: produtoAtual.preco, 
+            complementos: complementosSelecionados
+        });
+
+        atualizarCarrinho();
+        document.getElementById("complementos").style.display = "none";
+    }
+
+    function atualizarCarrinho() {
+        const itensCarrinho = document.getElementById("itens-carrinho");
+        itensCarrinho.innerHTML = ""; // Limpar itens existentes
+        let total = 0;
+
+        carrinho.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = `${item.nome} - R$ ${item.preco.toFixed(2)} | Complementos: ${item.complementos.join(", ")}`;
+            itensCarrinho.appendChild(li);
+            total += item.preco;
+        });
+
+        total += frete; // Adicionar frete ao total
+        document.getElementById("total").textContent = `Total: R$ ${total.toFixed(2)}`;
+
+        // Atualizar mensagem do carrinho
+        document.getElementById("carrinho-vazio").style.display = carrinho.length ? "none" : "block";
+    }
+
+    function finalizarCompra() {
+        if (carrinho.length > 0) {
+            document.getElementById("carrinho").style.display = "none";
+            document.getElementById("formulario-entrega").style.display = "block";
+        } else {
+            alert("Seu carrinho está vazio.");
         }
+    }
 
-        function adicionarAoCarrinhoMontado() {
-            const nomeProduto = "Copo Montado"; // Modifique conforme a lógica
-            const precoProduto = 20; // Preço fixo para o exemplo
+    function enviarPedido() {
+        const nome = document.getElementById("nome").value;
+        const bairro = document.getElementById("bairro").value;
+        const rua = document.getElementById("rua").value;
+        const numero = document.getElementById("numero").value;
+        const referencia = document.getElementById("referencia").value;
+        const pagamento = document.querySelector('input[name="pagamento"]:checked').value;
 
-            // Obter complementos selecionados
-            const complementosSelecionados = [];
-            const checkboxes = document.querySelectorAll('.complementos input[type="checkbox"]:checked');
-            checkboxes.forEach(checkbox => {
-                complementosSelecionados.push(checkbox.value);
-            });
+        // Montar a mensagem do pedido
+        let mensagem = `*Pedido de Copo da Felicidade ${nome}*\n`;
+        mensagem += `Bairro: ${bairro}\n`;
+        mensagem += `Rua: ${rua}, Número: ${numero}\n`;
+        mensagem += `Ponto de Referência: ${referencia}\n`;
+        mensagem += `Forma de Pagamento: ${pagamento}\n`;
+        mensagem += `Itens do Carrinho:\n`;
 
-            // Adicionar ao carrinho
-            carrinho.push({ nome: nomeProduto, preco: precoProduto, complementos: complementosSelecionados });
-            atualizarCarrinho();
-            document.getElementById("complementos").style.display = "none";
-        }
+        carrinho.forEach(item => {
+            mensagem += `- ${item.nome} - R$ ${item.preco.toFixed(2)} | Complementos: ${item.complementos.join(", ")}\n`;
+        });
 
-        function atualizarCarrinho() {
-            const itensCarrinho = document.getElementById("itens-carrinho");
-            itensCarrinho.innerHTML = ""; // Limpar itens existentes
-            let total = 0;
+        // Calcular o total
+        const total = carrinho.reduce((acc, item) => acc + item.preco, 0) + frete;
+        mensagem += `Total: R$ ${total.toFixed(2)}\n`;
 
-            carrinho.forEach(item => {
-                const li = document.createElement("li");
-                li.textContent = `${item.nome} - R$ ${item.preco.toFixed(2)} | Complementos: ${item.complementos.join(", ")}`;
-                itensCarrinho.appendChild(li);
-                total += item.preco;
-            });
+        // Formatar a URL do WhatsApp
+        const whatsappLink = `https://wa.me/5527999595386?text=${encodeURIComponent(mensagem)}`;
 
-            total += frete; // Adicionar frete ao total
-            document.getElementById("total").textContent = `Total: R$ ${total.toFixed(2)}`;
+        // Redirecionar para o WhatsApp
+        window.open(whatsappLink, '_blank');
 
-            // Atualizar mensagem do carrinho
-            document.getElementById("carrinho-vazio").style.display = carrinho.length ? "none" : "block";
-        }
-
-        function finalizarCompra() {
-            if (carrinho.length > 0) {
-                document.getElementById("carrinho").style.display = "none";
-                document.getElementById("formulario-entrega").style.display = "block";
-            } else {
-                alert("Seu carrinho está vazio.");
-            }
-        }
-
-        function enviarPedido() {
-            const nome = document.getElementById("nome").value;
-            const bairro = document.getElementById("bairro").value;
-            const rua = document.getElementById("rua").value;
-            const numero = document.getElementById("numero").value;
-            const referencia = document.getElementById("referencia").value;
-            const pagamento = document.querySelector('input[name="pagamento"]:checked').value;
-
-            // Montar a mensagem do pedido
-            let mensagem = `*Pedido de ${nome}*\n`;
-            mensagem += `Bairro: ${bairro}\n`;
-            mensagem += `Rua: ${rua}, Número: ${numero}\n`;
-            mensagem += `Ponto de Referência: ${referencia}\n`;
-            mensagem += `Forma de Pagamento: ${pagamento}\n`;
-            mensagem += `Itens do Carrinho:\n`;
-
-            carrinho.forEach(item => {
-                mensagem += `- ${item.nome} - R$ ${item.preco.toFixed(2)} | Complementos: ${item.complementos.join(", ")}\n`;
-            });
-
-            // Calcular o total
-            const total = carrinho.reduce((acc, item) => acc + item.preco, 0) + frete;
-            mensagem += `Total: R$ ${total.toFixed(2)}\n`;
-
-            // Formatar a URL do WhatsApp
-            const whatsappLink = `https://wa.me/5527999595386?text=${encodeURIComponent(mensagem)}`;
-
-            // Redirecionar para o WhatsApp
-            window.open(whatsappLink, '_blank');
-
-            // Limpar o carrinho e esconder o formulário
-            carrinho.length = 0; // Limpar carrinho
-            document.getElementById("formulario-entrega").style.display = "none";
-            document.getElementById("carrinho").style.display = "block";
-            atualizarCarrinho(); // Atualizar visualização do carrinho
-        }
-    </script>
+        // Limpar o carrinho e esconder o formulário
+        carrinho.length = 0; // Limpar carrinho
+        document.getElementById("formulario-entrega").style.display = "none";
+        document.getElementById("carrinho").style.display = "block";
+        atualizarCarrinho(); // Atualizar visualização do carrinho
+    }
+</script>
 </body>
 </html>
